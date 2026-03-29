@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Meet — Samuel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #1f1f1f;
+    --accent: #c8f135;
+    --accent2: #3df5c1;
+    --accent3: #ff5c5c;
+    --text: #e8e8e0;
+    --muted: #666;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    padding: 3rem 2rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .header-left {
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    line-height: 1.8;
+    animation: fadeUp 0.6s 0.15s ease both;
+  }
+
+  /* DIVIDER */
+  .divider {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .divider hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0 2rem;
+    max-width: 1100px;
+    margin: 2.5rem auto 1.2rem;
+  }
+
+  /* DEMO CARDS */
+  .demos {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  @media (max-width: 768px) {
+    .demos { grid-template-columns: 1fr; }
+  }
+
+  .demo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.8rem;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .demo-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(200,241,53,0.04));
+    pointer-events: none;
+  }
+
+  .demo-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .demo-card:hover .demo-arrow {
+    transform: translate(3px, -3px);
+    color: var(--accent);
+  }
+
+  .demo-number {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .demo-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
+  }
+
+  .demo-url {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent2);
+    margin-bottom: 1rem;
+  }
+
+  .demo-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+    font-family: var(--mono);
+  }
+
+  .demo-arrow {
+    position: absolute;
+    top: 1.8rem;
+    right: 1.8rem;
+    font-size: 1.1rem;
+    color: var(--border);
+    transition: transform 0.2s, color 0.2s;
+  }
+
+  .demo-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1.2rem;
+  }
+
+  .pill {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* TOPIC GRID */
+  .topics {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    animation: fadeUp 0.6s 0.45s ease both;
+  }
+
+  @media (max-width: 768px) {
+    .topics { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .topics { grid-template-columns: 1fr; }
+  }
+
+  .topic-card {
+    background: var(--bg);
+    padding: 1.4rem 1.4rem 1.2rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .topic-card:hover {
+    background: var(--surface);
+  }
+
+  .topic-card:hover .topic-icon {
+    transform: scale(1.1);
+  }
+
+  .topic-cat {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  .topic-cat.qa    { color: var(--accent2); }
+  .topic-cat.life  { color: #f5c842; }
+  .topic-cat.code  { color: var(--accent); }
+  .topic-cat.misc  { color: var(--accent3); }
+
+  .topic-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+    display: block;
+    transition: transform 0.2s;
+  }
+
+  .topic-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.4rem;
+  }
+
+  .topic-body {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* INSIGHT BAR */
+  .insight-bar {
+    max-width: 1100px;
+    margin: 2rem auto 0;
+    padding: 0 2rem;
+    animation: fadeUp 0.6s 0.55s ease both;
+  }
+
+  .insight-inner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    padding: 1.2rem 1.6rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .insight-emoji {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .insight-text {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  .insight-text strong {
+    color: var(--accent3);
+  }
+
+  /* FOOTER */
+  footer {
+    max-width: 1100px;
+    margin: 3rem auto 0;
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SCROLL ANIMATE */
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .scroll-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="tag">AI Meet · 5 min slot</div>
+    <h1>Jak používám<br><span>AI každý den</span></h1>
+  </div>
+  <div class="header-meta">
+    Samuel Wlaschinsky<br>
+    QA Automation · OSVČ<br>
+    swlabs.tech
+  </div>
+</header>
+
+<div class="divider"><hr></div>
+
+<div class="section-label">— live demo</div>
+
+<div class="demos">
+  <a class="demo-card" href="https://swlabs.tech" target="_blank">
+    <div class="demo-number">01 / DEMO</div>
+    <div class="demo-title">InvoiCzech</div>
+    <div class="demo-url">swlabs.tech</div>
+    <div class="demo-desc">Fakturační app od nuly. Vibe coding — FastAPI + SQLite, PDF, XML export pro DPH, PWA.</div>
+    <div class="demo-stack">
+      <span class="pill">FastAPI</span>
+      <span class="pill">SQLite</span>
+      <span class="pill">PDF</span>
+      <span class="pill">KH1 / DP3</span>
+      <span class="pill">PWA</span>
+    </div>
+    <div class="demo-arrow">↗</div>
+  </a>
+
+  <a class="demo-card" href="https://autoskola.swlabs.tech" target="_blank">
+    <div class="demo-number">02 / DEMO</div>
+    <div class="demo-title">Autoškola Janouš</div>
+    <div class="demo-url">autoskola.swlabs.tech</div>
+    <div class="demo-desc">UX audit + React prototypy. AI generovalo varianty designu, Claude pomohl vybrat a doladit.</div>
+    <div class="demo-stack">
+      <span class="pill">React</span>
+      <span class="pill">UX audit</span>
+      <span class="pill">Design prototyp</span>
+    </div>
+    <div class="demo-arrow">↗</div>
+  </a>
+</div>
+
+<div class="divider" style="margin-top:2.5rem"><hr></div>
+<div class="section-label">— témata</div>
+
+<div class="topics scroll-reveal">
+
+  <div class="topic-card">
+    <span class="topic-icon">🧪</span>
+    <div class="topic-cat qa">QA · Testování</div>
+    <div class="topic-title">Automatizované testování</div>
+    <div class="topic-body">RF → Playwright migrace (~350 testů). Script pro tagování verzí. AI pomáhá debugovat race conditions.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">🎫</span>
+    <div class="topic-cat qa">QA · Tickets</div>
+    <div class="topic-title">Analýza ticketů</div>
+    <div class="topic-body">AI pomáhá pochopit kontext ticketu, určit hlavní věc k testování, navrhnout scénáře.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">📄</span>
+    <div class="topic-cat qa">QA · Dokumentace</div>
+    <div class="topic-title">Dokumentace & CSV</div>
+    <div class="topic-body">Generování dokumentace ke kódu. Formátování CSV, příprava testovacích dat a scénářů.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">🏠</span>
+    <div class="topic-cat life">Osobní projekty</div>
+    <div class="topic-title">Zahrada, kuchyň, bája</div>
+    <div class="topic-body">Plánování rekonstrukcí, kalkulace rozpočtů, porovnávání variant. AI jako rychlý analytik.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">💪</span>
+    <div class="topic-cat life">Fitness & zdraví</div>
+    <div class="topic-title">Trenér + InBody analýzy</div>
+    <div class="topic-body">Interpretace InBody měření, tvorba tréninkového plánu, výpočty maker a kalorií.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">🧬</span>
+    <div class="topic-cat life">Zábava</div>
+    <div class="topic-title">Genealogie & Instagram</div>
+    <div class="topic-body">Pátrání po rodokmenech. Hashtagy k příspěvkům. Analýza barev fotky od fotografa.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">🧠</span>
+    <div class="topic-cat code">Meta</div>
+    <div class="topic-title">Metapromptování</div>
+    <div class="topic-body">Jak lépe promptovat — systémové instrukce, role, output formát. AI jako nástroj na promptování AI.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">🤝</span>
+    <div class="topic-cat code">Komunikace</div>
+    <div class="topic-title">Zprávy & formulace</div>
+    <div class="topic-body">Pomoc s formulací zpráv (Martinovi a jiným). Shrnutí, jasná struktura, profesionální tón.</div>
+  </div>
+
+  <div class="topic-card">
+    <span class="topic-icon">⚠️</span>
+    <div class="topic-cat misc">Mindset</div>
+    <div class="topic-title">"To jsem neudělal já"</div>
+    <div class="topic-body">Zodpovědnost za AI výstup v kódu. Claude to vymyslel — ale kdo za to ručí? Ty.</div>
+  </div>
+
+</div>
+
+<div class="insight-bar scroll-reveal">
+  <div class="insight-inner">
+    <div class="insight-emoji">💬</div>
+    <div class="insight-text">
+      <strong>"To je tvoje chyba."</strong> — Ne. AI navrhlo kód, ty jsi ho schválil a nasadil. Zodpovědnost zůstává u člověka. AI je nástroj — výsledek je tvůj.
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Samuel Wlaschinsky · swlabs.tech</span>
+  <span>AI Meet · 2025</span>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.scroll-reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
